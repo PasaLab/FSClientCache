@@ -1,5 +1,7 @@
 package alluxio.client.file.cache.core;
 
+import alluxio.client.HitMetric;
+import alluxio.client.file.cache.Metric.HitRatioMetric;
 import alluxio.client.file.cache.struct.LinkNode;
 import alluxio.client.file.cache.struct.RBTree;
 
@@ -234,7 +236,7 @@ public class LinkedFileBucket {
     public void deleteInIndex(CacheInternalUnit unit) {
       mCacheIndex1.remove(unit);
       unit.clearTreeIndex();
-      // TODO make the mt function running as async thread
+      // TODO make the test function running as async thread
        test1(unit);
     }
 

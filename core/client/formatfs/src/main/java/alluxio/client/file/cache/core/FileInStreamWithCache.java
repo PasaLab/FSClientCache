@@ -14,11 +14,14 @@ package alluxio.client.file.cache.core;
 import alluxio.client.file.FileInStream;
 import alluxio.client.file.FileSystemContext;
 import alluxio.client.file.URIStatus;
+import alluxio.client.file.cache.Metric.ClientCacheStatistics;
+import alluxio.client.file.cache.Metric.HitRatioMetric;
 import alluxio.client.file.options.InStreamOptions;
 import alluxio.exception.PreconditionMessage;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import static alluxio.client.file.cache.core.ClientCacheContext.*;
@@ -52,18 +55,21 @@ public class FileInStreamWithCache extends FileInStream {
   }
 
   public int innerRead(byte[] b, int off, int len) throws IOException {
+    long st = System.currentTimeMillis();
     int res = super.read(b, off, len);
     if (res > 0) mPosition += res;
-
+    ClientCacheStatistics.INSTANCE.readUFSTime += (System.currentTimeMillis() - st);
     return res;
   }
 
   public int innerPositionRead(long pos, byte[] b, int off, int len) throws IOException {
+    long st = System.currentTimeMillis();
     long  b1 = System.currentTimeMillis();
     int res = super.positionedRead(pos, b, off, len);
     missSize += res;
     missTime ++;
     testRead.actualRead += System.currentTimeMillis() - b1;
+    ClientCacheStatistics.INSTANCE.readUFSTime += (System.currentTimeMillis() - st);
     return res;
   }
 
@@ -85,54 +91,71 @@ public class FileInStreamWithCache extends FileInStream {
     }
     if (mLockManager.evictCheck()) {
       try {
+        if (mCachePolicy.isFixedLength()) {
+          // take a note of real pos and len, to calculate hit size properly
+          FixLengthReadNote.takeNote(pos, len);
+        }
         LockTask task = ClientCacheContext.INSTANCE.getLockTask(mFileId);
         ClientCacheContext.readTask = task;
 
-        CacheUnit unit = mCacheContext.getCache(mFileId, mLength, pos, Math.min(pos + len,
-          mLength), task);
+        CacheUnit unit;
+        long beginForFixLength = pos;
+        long endForFixLength = pos + len;
+        long st = System.currentTimeMillis();
+        if (mCachePolicy.isFixedLength()) {
+          beginForFixLength = pos / CACHE_SIZE * CACHE_SIZE;
+          long endInd = (pos + len)/ CACHE_SIZE;
+          if ((pos + len) % CACHE_SIZE != 0) {
+            endInd ++;
+          }
+          endForFixLength = endInd * CACHE_SIZE;
+          unit = mCacheContext.getCache(mFileId, mLength, beginForFixLength, Math.min(endForFixLength,
+                  mLength), task);
+        } else {
+          unit = mCacheContext.getCache(mFileId, mLength, pos, Math.min(pos + len,
+                  mLength), task);
+        }
+        ClientCacheStatistics.INSTANCE.getCacheTime += (System.currentTimeMillis() - st);
         unit.setLockTask(task);
         if (unit.isFinish()) {
           ClientCacheContext.allHitTime ++;
-          if (pos < unit.getBegin()) {
-            System.out.println("wrong mt ------------");
-            System.out.println(unit);
-            System.out.println(pos + " " + Math.min(pos + len, mLength));
-
-            FileCacheUnit unit1 = mCacheContext.mFileIdToInternalList.get(unit.getFileId());
-            int index = unit1.mBuckets.getIndex(pos, Math.min(pos + len,
-              mLength));
-            System.out.println(index + " | " + unit1.mBuckets.getIndex(unit.getBegin(), unit.getEnd()));
-            LinkedFileBucket.RBTreeBucket bucket =(LinkedFileBucket.RBTreeBucket) unit1.mBuckets.mCacheIndex0[index];
-            System.out.println("start : " + bucket.mStart);
-            System.out.println("end : " + bucket.mEnd);
-            System.out.println(unit1.mBuckets.mBucketLength);
-
-            bucket.mCacheIndex1.print();
-
-            Iterator<CacheInternalUnit> iterator = unit1.getCacheList().iterator();
-            while (iterator.hasNext()) {
-              CacheInternalUnit tmp = iterator.next();
-              System.out.print(tmp.getBegin() + " " + tmp.getEnd() + " || ");
-            }
-            System.out.println();
-          }
-
+          long st1 = System.currentTimeMillis();
           Preconditions.checkArgument(pos >= unit.getBegin());
           int remaining = mCachePolicy.read((CacheInternalUnit) unit, b, off, pos, len);
           if (!isPosition) {
             mPosition += remaining;
           }
+          ClientCacheStatistics.INSTANCE.readUnitTime += (System.currentTimeMillis() - st1);
           return remaining;
         } else {
+          long st1 = System.currentTimeMillis();
           TempCacheUnit tmpUnit = (TempCacheUnit) unit;
           tmpUnit.setInStream(this);
-          res = mCachePolicy.read(tmpUnit, b, off, len, pos, mCacheContext.isAllowCache());
+          if (mCachePolicy.isFixedLength()) {
+            byte[]cachedBuf = new byte[(int)(endForFixLength-beginForFixLength)];
+            long preAccessSize = HitRatioMetric.INSTANCE.accessSize;
+            res = mCachePolicy.read(tmpUnit, cachedBuf, off, (int)(endForFixLength-beginForFixLength), beginForFixLength, mCacheContext.isAllowCache());
+
+            if (res != -1) {
+//              for(int i = 0; i < len; i ++) {
+//                b[i] = cachedBuf[(int) (pos - beginForFixLength) + i];
+//              }
+//              b = Arrays.copyOfRange(cachedBuf, (int) (pos - beginForFixLength), len);
+              System.arraycopy(cachedBuf, (int) (pos - beginForFixLength), b, 0, len);
+              res = len;
+              HitRatioMetric.INSTANCE.accessSize = preAccessSize + res;
+            }
+          } else {
+            res = mCachePolicy.read(tmpUnit, b, off, len, pos, mCacheContext.isAllowCache());
+          }
           if (res != len) {
             // the end of file
             tmpUnit.resetEnd((int) mLength);
           }
+          ClientCacheStatistics.INSTANCE.readTmpUnitTime += (System.currentTimeMillis() - st1);
         }
       } finally {
+        FixLengthReadNote.discardNote();
         mLockManager.evictReadUnlock();
       }
     } else {

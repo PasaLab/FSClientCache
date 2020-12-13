@@ -31,8 +31,8 @@ public class ParquetTest {
   static void parquetWriter(String outPath) throws Exception{
 
     alluxio.client.file.FileSystem fs = alluxio.client.file.FileSystem.Factory.get();
-    if(fs.exists(new AlluxioURI("/mt"))) {
-      fs.delete(new AlluxioURI("/mt"));
+    if(fs.exists(new AlluxioURI("/test"))) {
+      fs.delete(new AlluxioURI("/test"));
     }
     MessageType bigGroupSchema = Types.buildMessage().repeatedGroup().repeatedGroup().repeated
       (PrimitiveType.PrimitiveTypeName.INT32).
@@ -92,7 +92,7 @@ public class ParquetTest {
     System.out.println("test2");
     line = build.read();
     for (int i = 0; i < 1024; i ++) {
-      System.out.println("mt" + i);
+      System.out.println("test" + i);
 
       line.getGroup("midGroup", i);
     }
@@ -101,7 +101,7 @@ public class ParquetTest {
 
   public static void main(String[] args) throws Exception {
 
-    parquetReaderV2("alluxio://localhost:19998/mt");
+    parquetReaderV2("alluxio://localhost:19998/test");
 
   }
 }

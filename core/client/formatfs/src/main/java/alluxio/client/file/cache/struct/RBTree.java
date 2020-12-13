@@ -533,9 +533,9 @@ public class RBTree<T extends LinkNode<T>> {
 		// 1. 将红黑树当作一颗二叉查找树，将节点添加到二叉查找树中。
 		while (x != null) {
 			y = x;
-			//System.out.println("add mt");
+			//System.out.println("add test");
 			cmp = node.compareTo((T) x);
-			//System.out.println("add mt finish");
+			//System.out.println("add test finish");
 
 			if (cmp < 0)
 				x = x.left;

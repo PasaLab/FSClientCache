@@ -1,8 +1,10 @@
 package alluxio.client.file.cache.submodularLib.cacheSet;
 
+import alluxio.client.file.cache.Metric.ClientCacheStatistics;
 import alluxio.client.file.cache.core.*;
 import alluxio.client.file.cache.struct.DoubleLinkedList;
 import alluxio.client.file.cache.struct.LongPair;
+import alluxio.client.file.cache.submodularLib.LRUPolicy;
 
 import java.util.*;
 
@@ -67,7 +69,7 @@ public class DivideGR extends LRUPolicy {
     }
     /*
     try {
-      uu.mBuckets.mCacheIndex0[i].mt();
+      uu.mBuckets.mCacheIndex0[i].test();
     } catch (RuntimeException e) {
       for (CacheInternalUnit uu1 : res) {
         System.out.println(uu1);
@@ -200,7 +202,13 @@ public class DivideGR extends LRUPolicy {
         task.unlockAll();
       }
     }
+    ClientCacheStatistics.INSTANCE.cacheSpaceUsed = mCacheSize;
     return delete;
+  }
+
+  @Override
+  public boolean isFixedLength() {
+    return false;
   }
 
   @Override

@@ -77,5 +77,38 @@
       <artifactId>alluxio-keyvalue-hadoop</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.alluxio</groupId>
+      <artifactId>formatfs</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+            <skipAssembly>false</skipAssembly>
+          <archive>
+            <manifest>
+              <mainClass>alluxio.examples.cache.CacheBenchmark</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
 </project>

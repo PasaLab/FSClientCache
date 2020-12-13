@@ -30,7 +30,6 @@
     </properties>
 
     <dependencies>
-
         <!-- https://mvnrepository.com/artifact/org.apache.parquet/parquet-common -->
         <dependency>
             <groupId>org.apache.parquet</groupId>
@@ -111,18 +110,6 @@
 
         <dependency>
             <groupId>org.alluxio</groupId>
-            <artifactId>alluxio-core-client-hdfs</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.alluxio</groupId>
-                    <artifactId>alluxio-core-client-fs</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.alluxio</groupId>
             <artifactId>alluxio-core-client-fs</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -130,7 +117,7 @@
 
     <build>
         <plugins>
-            <!-- Export mt classes in a mt-jar so that other projects can use them for testing -->
+            <!-- Export test classes in a test-jar so that other projects can use them for testing -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

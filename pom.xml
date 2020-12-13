@@ -105,7 +105,7 @@
       <name>Spring Release Repository</name>
       <url>http://repo.spring.io/libs-release</url>
       <releases>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </releases>
       <snapshots>
         <enabled>false</enabled>
@@ -221,7 +221,7 @@
       <dependency>
         <groupId>com.github.serceman</groupId>
         <artifactId>jnr-fuse</artifactId>
-        <version>0.5.1</version>
+        <version>0.5.3</version>
       </dependency>
       <dependency>
         <groupId>com.qmino</groupId>
@@ -1207,6 +1207,7 @@
             </goals>
             <configuration>
               <executable>${build.path}/style/check_no_windows_line_endings.sh</executable>
+              <skip>true</skip>
             </configuration>
           </execution>
         </executions>

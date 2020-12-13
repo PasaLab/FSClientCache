@@ -1,11 +1,11 @@
 package alluxio.client.file.cache.stream;
 
+import alluxio.client.file.FileInStream;
 import alluxio.client.file.cache.core.ClientCacheContext;
 import alluxio.util.io.BufferUtils;
 import alluxio.wire.BlockInfo;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class PartialLocalBlockInStream extends InputStream {
+public class PartialLocalBlockInStream extends FileInStream {
   private List<ByteBuffer> mReadedBuffer = new ArrayList<>();
   private FileChannel mChannel;
   private ClientCacheContext mContext = ClientCacheContext.INSTANCE;

@@ -1,5 +1,6 @@
 package alluxio.client.file.cache.core;
 
+import alluxio.client.file.cache.Metric.ClientCacheStatistics;
 import alluxio.client.file.cache.submodularLib.ISK;
 import alluxio.client.file.cache.submodularLib.IterateOptimizer;
 import alluxio.client.file.cache.submodularLib.cacheSet.CacheSet;
@@ -47,6 +48,10 @@ public enum SKPolicy implements CachePolicy, Runnable {
       mOptimizer = new GR((long) (mCacheCapacity * mLowWaterMark), new CacheSetUtils());
       mPolicyName = PolicyName.GR;
     }
+  }
+  @Override
+  public boolean isFixedLength() {
+    return false;
   }
 
   @Override
@@ -258,6 +263,7 @@ public enum SKPolicy implements CachePolicy, Runnable {
 
   public void check(TempCacheUnit unit) {
     mCacheSize += unit.getNewCacheSize();
+    ClientCacheStatistics.INSTANCE.cacheSpaceUsed = mCacheSize;
     // if(RL) {
     //  mRLAgent.AddCurrentReword(unit.getRealReadSize(), unit.getNewCacheSize());
     //}
