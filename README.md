@@ -25,7 +25,6 @@ $ jps
 15513 AlluxioWorker
 15515 AlluxioProxy
 15276 AlluxioMaster
-15278 AlluxioSecondaryMaster
 ```
 
 1. Clone Source Code
@@ -48,25 +47,25 @@ $ dd if=/dev/zero of=/tmp/test.20G bs=1G count=20
 
 4. Mount Target File on Alluxio
 ```bash
-$ alluxio fs mount /test.20G /tmp/test.20G
+$ alluxio fs mount /tmp /tmp
 ```
 
 5. Run Test
 ```bash
-$ java -cp examples/target/alluxio-examples-1.9.0-SNAPSHOT.jar alluxio.examples.cache.CacheBenchmark test.20G isk 1073741824 102400 evict 10
+$ java -cp examples/target/alluxio-examples-1.9.0-SNAPSHOT-jar-with-dependencies.jar alluxio.examples.cache.CacheBenchmark /tmp/test.20G isk 1g 2097152 evict 1.25
 ```
 
 **Parameter Description:**
 
-- `test.20G`: the path to file which you want to read
+- `/tmp/test.20G`: the path to file which you want to read
 
 - `isk`: the policy you want to test, optional {`isk`, `gr`, `lru`, `lfu`, `arc`, `eva`}
 
-- `1073741824`: the cache capacity in bytes, i.e. 1 GB
+- `1g`: the cache capacity
 
-- `evict`: the cache mode, optional {`evict`, `promotion`}
+- `evict`: the cache mode, optional {`evict`, `promote`}
 
-- `10`: how much GigaBytes you want to read (1000 read per GigaBytes)
+- `1.25`: how much GigaBytes you want to read (1000 read per GigaBytes)
 
 After test is finished, the statistics (including reading time, bytes hit ratio etc.) will be printed.
 
