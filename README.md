@@ -32,7 +32,7 @@ $ jps
 $ git clone https://github.com/PasaLab/FSClientCache
 ```
 
-2. Build
+2. Install Dependencies
 ```bash
 $ mvn clean install -Dmaven.javadoc.skip=true -D skipTests -D license.skip=true -Dcheckstyle.skip=true -Dfindbugs.skip=true
 ```
@@ -50,7 +50,12 @@ $ dd if=/dev/zero of=/tmp/test.20G bs=1G count=20
 $ alluxio fs mount /tmp /tmp
 ```
 
-5. Run Test
+5. Build Example
+```bash
+$ mvn assembly:assembly -Dmaven.javadoc.skip=true -D skipTests -D license.skip=true -Dcheckstyle.skip=true -Dfindbugs.skip=true -pl examples
+```
+
+6. Run Test
 ```bash
 $ java -cp examples/target/alluxio-examples-1.9.0-SNAPSHOT-jar-with-dependencies.jar alluxio.examples.cache.CacheBenchmark /tmp/test.20G isk 1g 2097152 evict 1.25
 ```
