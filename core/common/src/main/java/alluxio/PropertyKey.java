@@ -3048,6 +3048,14 @@ public final class PropertyKey implements Comparable<PropertyKey> {
                   .setConsistencyCheckLevel(ConsistencyCheckLevel.WARN)
                   .setScope(Scope.CLIENT)
                   .build();
+  public static final PropertyKey USER_CLIENT_CACHE_MOCK_ENABLED =
+          new Builder("alluxio.user.clientcache.mock.enabled")
+                  .setDefaultValue(false)
+                  .setDescription("Whether to enable mock of client-side caching on client " +
+                          "(So users dont need reading files really).")
+                  .setConsistencyCheckLevel(ConsistencyCheckLevel.WARN)
+                  .setScope(Scope.CLIENT)
+                  .build();
 
   /**
    * @param fullyQualifiedClassname a fully qualified classname

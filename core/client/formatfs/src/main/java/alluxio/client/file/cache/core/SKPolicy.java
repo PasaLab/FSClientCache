@@ -82,7 +82,7 @@ public enum SKPolicy implements CachePolicy, Runnable {
   }
 
   public long evict() {
-    System.out.println("evict begin " + mCacheSize / (1024 * 1024) + " " + mCacheCapacity / (1024 * 1024) + " " + Thread.currentThread().getId());
+//    System.out.println("evict begin " + mCacheSize / (1024 * 1024) + " " + mCacheCapacity / (1024 * 1024) + " " + Thread.currentThread().getId());
     isEvicting = true;
     synchronized (mAccessLock) {
       if (useOne) {
@@ -161,7 +161,7 @@ public enum SKPolicy implements CachePolicy, Runnable {
   @Override
   public void run() {
     useGhost();
-    System.out.println("check thread " + Thread.currentThread().getId());
+//    System.out.println("check thread " + Thread.currentThread().getId());
     while (true) {
       try {
         if (evictCheck()) {
@@ -172,7 +172,7 @@ public enum SKPolicy implements CachePolicy, Runnable {
                 try {
                   evict();
                 } catch (Exception e) {
-                  e.printStackTrace();
+//                  e.printStackTrace();
                 } finally {
                   if (!mContext.isAllowCache()) {
                     mContext.allowCache();

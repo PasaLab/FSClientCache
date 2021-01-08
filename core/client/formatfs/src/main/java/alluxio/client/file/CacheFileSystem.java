@@ -17,11 +17,14 @@ import alluxio.PropertyKey;
 import alluxio.client.file.cache.core.ClientCacheContext;
 import alluxio.client.file.cache.core.FileInStreamWithCache;
 import alluxio.client.file.cache.core.MetedataCache;
+import alluxio.client.file.cache.core.MockFileInStreamWithCache;
 import alluxio.client.file.options.InStreamOptions;
 import alluxio.client.file.options.OpenFileOptions;
 import alluxio.exception.AlluxioException;
 import alluxio.exception.ExceptionMessage;
 import alluxio.exception.FileDoesNotExistException;
+import alluxio.security.authorization.AccessControlList;
+import alluxio.wire.FileInfo;
 
 import java.io.IOException;
 
@@ -80,8 +83,25 @@ public class CacheFileSystem extends BaseFileSystem {
     return new FileInStreamWithCache(inStreamOptions, mCacheContext, status);
   }
 
+  private FileInfo newMockFileInfo(AlluxioURI path) {
+    FileInfo info = new FileInfo();
+    info.setLength(20L * 1024L * 1024L * 1024L);
+    info.setAcl(AccessControlList.EMPTY_ACL);
+    info.setPath(path.getPath());
+    info.setName(path.getName());
+    info.setFileId(path.getName().hashCode());
+    return info;
+  }
+
   public FileInStream openFileWithCache(AlluxioURI path) throws IOException, AlluxioException {
     URIStatus status;
+    if (Configuration.getBoolean(PropertyKey.USER_CLIENT_CACHE_MOCK_ENABLED)) {
+      // mock client-side caching
+      status = new URIStatus(newMockFileInfo(path));
+      InStreamOptions inStreamOptions = OpenFileOptions.defaults().toInStreamOptions(status);
+      metedataCache.cacheMetedata(path, status);
+      return new MockFileInStreamWithCache(inStreamOptions, mCacheContext, status);
+    }
     if (!metedataCache.cached(path)) {
       status = getStatus(path);
       metedataCache.cacheMetedata(path, status);
@@ -92,8 +112,6 @@ public class CacheFileSystem extends BaseFileSystem {
       throw new FileDoesNotExistException(
         ExceptionMessage.CANNOT_READ_DIRECTORY.getMessage(status.getName()));
     }
-
-
 
     InStreamOptions inStreamOptions = OpenFileOptions.defaults().toInStreamOptions(status);
     return new FileInStreamWithCache(inStreamOptions, mCacheContext, status);
